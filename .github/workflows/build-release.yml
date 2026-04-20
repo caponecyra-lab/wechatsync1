@@ -1,0 +1,36 @@
+name: 自动打包发布
+on:
+  push:
+    tags:
+      - 'v*' # 只要推送v开头的标签，就自动触发打包
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    name: 打包Windows EXE
+    steps:
+      - name: 拉取代码
+        uses: actions/checkout@v4
+
+      - name: 安装Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: 安装项目依赖
+        run: npm install
+
+      - name: 安装打包工具pkg
+        run: npm install -g pkg
+
+      - name: 打包成单文件EXE
+        run: pkg server.js --target node20-win-x64 --output wechatsync1.exe
+
+      - name: 自动发布到GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: wechatsync1.exe
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
